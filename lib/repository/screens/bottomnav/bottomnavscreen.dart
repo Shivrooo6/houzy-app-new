@@ -76,7 +76,7 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
               bool isSelected = index == currentIndex;
               return BottomNavigationBarItem(
                 icon: Image.asset(
-                  'assets/icons/${icons[index]}',
+                  'assets/images/${icons[index]}',
                   width: isSelected ? 28 : 24,
                   height: isSelected ? 28 : 24,
                   color: isSelected ? const Color(0XFFF54A00) : Colors.grey,
