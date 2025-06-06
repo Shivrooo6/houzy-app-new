@@ -152,7 +152,7 @@ class BookingScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text("Full Apartment Cleaning", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-              Text("Card Action", style: TextStyle(color: Colors.grey)),
+              Text("Card Action", style: TextStyle(color: Colors.grey, fontSize: 14)),
             ],
           ),
           SizedBox(height: 8),

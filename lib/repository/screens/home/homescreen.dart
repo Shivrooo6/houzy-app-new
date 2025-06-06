@@ -41,7 +41,7 @@ class HomeScreen extends StatelessWidget {
               ),
 
               IconButton(
-                icon: UiHelper.CustomImage(img: 'book-open-text.png'),
+                icon: UiHelper.CustomImage(img: 'notebook.png'),
                 onPressed: () {
                   showModalBottomSheet(
                     context: context,
