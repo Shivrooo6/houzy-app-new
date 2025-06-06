@@ -6,28 +6,24 @@ import 'package:houzy/repository/screens/services/servicesscreen.dart';
 import 'package:houzy/repository/screens/account/accountscreen.dart';
 
 class BottomNavScreen extends StatefulWidget {
+  final int initialIndex;
+
+  const BottomNavScreen({super.key, this.initialIndex = 0});
+
   @override
   State<BottomNavScreen> createState() => _BottomNavScreenState();
 }
 
 class _BottomNavScreenState extends State<BottomNavScreen> {
-  int currentIndex = 0;
-
-  final List<Widget> pages = [
-    HomeScreen(),
-    BookingScreen(),
-    ServicesScreen(),
-    AccountScreen(),
-    HelpScreen(),
-  ];
+  late int currentIndex;
 
   final List<String> icons = [
-  "house.png",
-  "book-open-text.png",
-  "store.png",
-  "user.png",
-  "circle-help.png"
-];
+    "house.png",
+    "book-open-text.png",
+    "store.png",
+    "user.png",
+    "circle-help.png"
+  ];
 
   final List<String> labels = [
     "Home",
@@ -36,6 +32,22 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
     "Account",
     "Help"
   ];
+
+  late final List<Widget> pages;
+
+  @override
+  void initState() {
+    super.initState();
+    currentIndex = widget.initialIndex;
+
+    pages = [
+      const HomeScreen(),
+      const BookingScreen(),
+      const ServicesScreen(),
+      const AccountScreen(),
+      const HelpScreen(),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,29 +85,22 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
               });
             },
             items: List.generate(5, (index) {
-  bool isSelected = index == currentIndex;
-  final imagePath = 'assets/images/${icons[index]}';
+              bool isSelected = index == currentIndex;
+              final imagePath = 'assets/images/${icons[index]}';
 
-  return BottomNavigationBarItem(
-    icon: Builder(
-      builder: (context) {
-        print('Trying to load image: $imagePath');
-        return Image.asset(
-          imagePath,
-          width: isSelected ? 28 : 24,
-          height: isSelected ? 28 : 24,
-          color: isSelected ? const Color(0XFFF54A00) : Colors.grey,
-          errorBuilder: (context, error, stackTrace) {
-            print('❌ Failed to load: $imagePath');
-            return const Icon(Icons.error, color: Colors.red);
-          },
-        );
-      },
-    ),
-    label: labels[index],
-  );
-}),
-
+              return BottomNavigationBarItem(
+                icon: Image.asset(
+                  imagePath,
+                  width: isSelected ? 28 : 24,
+                  height: isSelected ? 28 : 24,
+                  color: isSelected ? const Color(0XFFF54A00) : Colors.grey,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Icon(Icons.error, color: Colors.red);
+                  },
+                ),
+                label: labels[index],
+              );
+            }),
           ),
         ),
       ),
