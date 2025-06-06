@@ -22,12 +22,12 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
   ];
 
   final List<String> icons = [
-    "house.png",
-    "book-open-text.png",
-    "store.png",
-    "user.png",
-    "circle-help.png"
-  ];
+  "house.png",
+  "book-open-text.png",
+  "store.png",
+  "user.png",
+  "circle-help.png"
+];
 
   final List<String> labels = [
     "Home",
@@ -73,17 +73,29 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
               });
             },
             items: List.generate(5, (index) {
-              bool isSelected = index == currentIndex;
-              return BottomNavigationBarItem(
-                icon: Image.asset(
-                  'assets/images/${icons[index]}',
-                  width: isSelected ? 28 : 24,
-                  height: isSelected ? 28 : 24,
-                  color: isSelected ? const Color(0XFFF54A00) : Colors.grey,
-                ),
-                label: labels[index],
-              );
-            }),
+  bool isSelected = index == currentIndex;
+  final imagePath = 'assets/images/${icons[index]}';
+
+  return BottomNavigationBarItem(
+    icon: Builder(
+      builder: (context) {
+        print('Trying to load image: $imagePath');
+        return Image.asset(
+          imagePath,
+          width: isSelected ? 28 : 24,
+          height: isSelected ? 28 : 24,
+          color: isSelected ? const Color(0XFFF54A00) : Colors.grey,
+          errorBuilder: (context, error, stackTrace) {
+            print('❌ Failed to load: $imagePath');
+            return const Icon(Icons.error, color: Colors.red);
+          },
+        );
+      },
+    ),
+    label: labels[index],
+  );
+}),
+
           ),
         ),
       ),

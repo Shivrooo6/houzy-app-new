@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
+import 'package:houzy/repository/screens/bottomnav/bottomnavscreen.dart';
 import 'firebase_options.dart';
 import 'package:houzy/repository/splash/splashscreen.dart';
 import 'package:houzy/repository/screens/login/loginscreen.dart';
-import 'package:houzy/repository/screens/home/homescreen.dart';
 import 'package:houzy/repository/screens/account/accountscreen.dart'; // make sure you have this
 
 void main() async {
@@ -42,7 +41,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const AuthWrapper(),
         '/login': (context) => const LoginScreen(),
-        '/home': (context) => const HomeScreen(),
+        '/home': (context) => BottomNavScreen(),
         '/account': (context) => const AccountScreen(),
       },
     );

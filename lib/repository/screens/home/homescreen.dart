@@ -41,7 +41,7 @@ class HomeScreen extends StatelessWidget {
               ),
 
               IconButton(
-                icon: UiHelper.CustomImage(img: 'notebook.png'),
+                icon: UiHelper.CustomImage(img: 'book-open-text.png'),
                 onPressed: () {
                   showModalBottomSheet(
                     context: context,
@@ -87,7 +87,7 @@ class HomeScreen extends StatelessWidget {
                             title: const Text('Profile'),
                             onTap: () {
                               Navigator.pop(context);
-                              Navigator.pushNamed(context, 'Account Screen');
+                              Navigator.pushNamed(context, '/account');
                             },
                           ),
                           ListTile(

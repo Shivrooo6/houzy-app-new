@@ -69,16 +69,7 @@ class BookingScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.note_alt_outlined),
             onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-                ),
-                builder: (context) => const SizedBox(
-                  height: 200,
-                  child: Center(child: Text("Ongoing Subscriptions")),
-                ),
-              );
+              _showBookingBottomSheet(context:context);
             },
           ),
           IconButton(
@@ -116,7 +107,7 @@ class BookingScreen extends StatelessWidget {
                         title: const Text('Profile'),
                         onTap: () {
                           Navigator.pop(context);
-                          Navigator.pushNamed(context, 'Account Screen');
+                          Navigator.pushNamed(context, '/account');
                         },
                       ),
                       ListTile(
@@ -149,9 +140,9 @@ class BookingScreen extends StatelessWidget {
   Widget _bookingCard() {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(19),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: const Color.fromARGB(255, 99, 98, 98)),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -164,17 +155,114 @@ class BookingScreen extends StatelessWidget {
               Text("Card Action", style: TextStyle(color: Colors.grey)),
             ],
           ),
-          SizedBox(height: 4),
+          SizedBox(height: 8),
           Text("4.9 (28k bookings)", style: TextStyle(fontSize: 13)),
-          SizedBox(height: 4),
+          SizedBox(height: 10),
           Text(
-            "Full Deep Cleaning of bathrooms and kitchens\n,including dusting and vacuuming",
+            "Full Deep Cleaning of bathrooms and kitchens,\nincluding dusting and vacuuming",
             style: TextStyle(fontSize: 13),
           ),
-          SizedBox(height: 8),
+          SizedBox(height: 15),
           Text("View Details", style: TextStyle(color: Colors.deepOrange, fontWeight: FontWeight.bold)),
         ],
       ),
     );
   }
+}
+
+void _showBookingBottomSheet({required BuildContext context}) {
+  showModalBottomSheet(
+    context: context,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    ),
+    builder: (context) {
+        return Padding(
+    padding: const EdgeInsets.all(16.0),
+    child: ConstrainedBox(
+      constraints: BoxConstraints(
+        maxHeight: 400, // limit height so it won't overflow the screen
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Currently Ongoing Subscription",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 6),
+            const Text("All Current ongoing subscriptions comes here"),
+            const SizedBox(height: 12),
+            ...List.generate(3, (index) {
+              return Card(
+                margin: const EdgeInsets.symmetric(vertical: 6),
+                child: ListTile(
+                  title: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text("Service Name"),
+                      SizedBox(height: 15),
+                      Text(
+                        "Card Content",
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ],
+                  ),
+                  trailing: ElevatedButton(
+                    onPressed: () {},
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFF54A00),
+                      minimumSize: const Size(80, 32), // smaller width and height
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), // adjust padding if needed
+                    ),
+                    child: const Text(
+                      "Detailed View",
+                      style: TextStyle(fontSize: 12), // smaller text size
+                    ),
+                  ),
+                ),
+              );
+            }),
+
+            const SizedBox(height: 6),
+            ...List.generate(3, (index) {
+              return Card(
+                margin: const EdgeInsets.symmetric(vertical: 6),
+                child: ListTile(
+                  title: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text("Service Name"),
+                      SizedBox(height: 15), // Add vertical space here
+                      Text(
+                        "Card Content",
+                        style: TextStyle(fontSize: 12),
+                      ),
+
+                    ],
+                  ),
+                  trailing: ElevatedButton(
+                    onPressed: () {},
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFF54A00),
+                      minimumSize: const Size(80, 32), // smaller width and height
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), // adjust padding if needed
+                    ),
+                    child: const Text(
+                      "Detailed View",
+                      style: TextStyle(fontSize: 12), // smaller text size
+                    ),
+                  ),
+                ),
+              );
+            }),
+
+          ],
+        ),
+      ),
+    ),
+  );
+}
+  );
 }
