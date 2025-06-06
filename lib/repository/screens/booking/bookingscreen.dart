@@ -192,7 +192,7 @@ void _showBookingBottomSheet({required BuildContext context}) {
     padding: const EdgeInsets.all(16.0),
     child: ConstrainedBox(
       constraints: BoxConstraints(
-        maxHeight: 400, // limit height so it won't overflow the screen
+        maxHeight: 400,
       ),
       child: SingleChildScrollView(
         child: Column(
@@ -224,12 +224,12 @@ void _showBookingBottomSheet({required BuildContext context}) {
                     onPressed: () {},
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFF54A00),
-                      minimumSize: const Size(80, 32), // smaller width and height
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), // adjust padding if needed
+                      minimumSize: const Size(80, 32), 
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), 
                     ),
                     child: const Text(
                       "Detailed View",
-                      style: TextStyle(fontSize: 12), // smaller text size
+                      style: TextStyle(fontSize: 12), 
                     ),
                   ),
                 ),
@@ -245,7 +245,7 @@ void _showBookingBottomSheet({required BuildContext context}) {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: const [
                       Text("Service Name"),
-                      SizedBox(height: 15), // Add vertical space here
+                      SizedBox(height: 15), 
                       Text(
                         "Card Content",
                         style: TextStyle(fontSize: 12),
@@ -257,12 +257,12 @@ void _showBookingBottomSheet({required BuildContext context}) {
                     onPressed: () {},
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFF54A00),
-                      minimumSize: const Size(80, 32), // smaller width and height
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), // adjust padding if needed
+                      minimumSize: const Size(80, 32), 
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), 
                     ),
                     child: const Text(
                       "Detailed View",
-                      style: TextStyle(fontSize: 12), // smaller text size
+                      style: TextStyle(fontSize: 12), 
                     ),
                   ),
                 ),

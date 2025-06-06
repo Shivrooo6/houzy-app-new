@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class HelpScreen extends StatefulWidget {
   const HelpScreen({super.key});
@@ -9,54 +10,55 @@ class HelpScreen extends StatefulWidget {
 }
 
 class _HelpScreenState extends State<HelpScreen> {
-  final List<Map<String, dynamic>> _messages = [];
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
-  void _sendMessage() {
+  final CollectionReference _messagesCollection =
+      FirebaseFirestore.instance.collection('support_messages');
+
+  void _sendMessage() async {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
 
-    final timestamp = DateTime.now();
-
-    setState(() {
-      _messages.add({'sender': 'user', 'text': text, 'time': timestamp});
-      _controller.clear();
+    // Add user message to Firestore
+    await _messagesCollection.add({
+      'sender': 'user',
+      'text': text,
+      'time': FieldValue.serverTimestamp(),
     });
 
-    Future.delayed(const Duration(milliseconds: 600), () {
-      setState(() {
-        _messages.add({
-          'sender': 'bot',
-          'text': 'We received: "$text". We’ll reply soon!',
-          'time': DateTime.now()
-        });
-      });
-      _scrollToBottom();
-    });
+    _controller.clear();
 
     _scrollToBottom();
   }
 
   void _scrollToBottom() {
     Future.delayed(const Duration(milliseconds: 300), () {
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
     });
   }
 
-  Widget _buildMessage(Map<String, dynamic> msg) {
-    final isUser = msg['sender'] == 'user';
-    final time = DateFormat('hh:mm a').format(msg['time']);
+  Widget _buildMessage(DocumentSnapshot doc) {
+    final data = doc.data()! as Map<String, dynamic>;
+    final isUser = data['sender'] == 'user';
+
+    final Timestamp? timestamp = data['time'] as Timestamp?;
+    final time = timestamp != null
+        ? DateFormat('hh:mm a').format(timestamp.toDate())
+        : '';
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
-        mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment:
+            isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
           if (!isUser)
             const CircleAvatar(
@@ -66,13 +68,16 @@ class _HelpScreenState extends State<HelpScreen> {
           const SizedBox(width: 8),
           Flexible(
             child: Column(
-              crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              crossAxisAlignment:
+                  isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
                     gradient: isUser
-                        ? const LinearGradient(colors: [Color(0xFF4facfe), Color(0xFF00f2fe)])
+                        ? const LinearGradient(
+                            colors: [Color(0xFF4facfe), Color(0xFF00f2fe)])
                         : null,
                     color: isUser ? null : const Color(0xFFEFEFEF),
                     borderRadius: BorderRadius.only(
@@ -83,7 +88,7 @@ class _HelpScreenState extends State<HelpScreen> {
                     ),
                   ),
                   child: Text(
-                    msg['text'],
+                    data['text'] ?? '',
                     style: TextStyle(color: isUser ? Colors.white : Colors.black87),
                   ),
                 ),
@@ -114,10 +119,23 @@ class _HelpScreenState extends State<HelpScreen> {
       body: Column(
         children: [
           Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              itemCount: _messages.length,
-              itemBuilder: (context, index) => _buildMessage(_messages[index]),
+            child: StreamBuilder<QuerySnapshot>(
+              stream: _messagesCollection
+                  .orderBy('time', descending: false)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                final docs = snapshot.data!.docs;
+                // Scroll to bottom when new messages come
+                WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+                return ListView.builder(
+                  controller: _scrollController,
+                  itemCount: docs.length,
+                  itemBuilder: (context, index) => _buildMessage(docs[index]),
+                );
+              },
             ),
           ),
           const Divider(height: 1),
