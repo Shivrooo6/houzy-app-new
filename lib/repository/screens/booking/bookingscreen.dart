@@ -149,12 +149,23 @@ class BookingScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: const [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text("Full Apartment Cleaning", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-              Text("Card Action", style: TextStyle(color: Colors.grey, fontSize: 14)),
-            ],
-          ),
+  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  children: [
+    Expanded(
+      child: Text(
+        "Full Apartment Cleaning",
+        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+        overflow: TextOverflow.ellipsis,
+      ),
+    ),
+    SizedBox(width: 8),
+    Text(
+      "Card Action",
+      style: TextStyle(color: Colors.grey, fontSize: 14),
+    ),
+  ],
+),
+
           SizedBox(height: 8),
           Text("4.9 (28k bookings)", style: TextStyle(fontSize: 13)),
           SizedBox(height: 10),
