@@ -17,6 +17,7 @@ class BookingScreen extends StatelessWidget {
                 alignment: Alignment.centerLeft,
                 child: Text(
                   'Full Home Cleaning',
+                  
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 ),
               ),
