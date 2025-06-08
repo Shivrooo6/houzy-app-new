@@ -19,9 +19,11 @@ dependencies:
   google_sign_in_android: ^6.2.1
   google_sign_in_ios: ^5.9.0
   google_sign_in_platform_interface: ^2.5.0
-  google_sign_in_web: ^0.12.4+4
-  intl: ^0.18.1 
+  google_sign_in_web: ^0.12.4+4 
   imagekit: ^0.0.5
+  intl: ^0.19.0
+  http: ^0.13.6
+  cloud_firestore_web: ^4.4.8
 
 
   cupertino_icons: ^1.0.8
