@@ -13,7 +13,7 @@ class ServiceCard extends StatelessWidget {
     required this.serviceTitle,
     required this.serviceDescription,
     required this.features,
-    this.isPopular = false,
+    this.isPopular = false, required String price, required String duration,
   });
 
   @override
@@ -137,7 +137,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
             serviceTitle: service['title'],
             serviceDescription: service['description'],
             features: List<String>.from(service['features']),
-            isPopular: service['isPopular'],
+            isPopular: service['isPopular'], price: '', duration: '',
           );
         },
       ),

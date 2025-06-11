@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:houzy/repository/widgets/uihelper.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:animate_do/animate_do.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -27,250 +28,209 @@ class HomeScreen extends StatelessWidget {
   Widget _buildTopHeader(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
 
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF00AEEF), Color(0xFFF54A00)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(right: 62),
+                  child: SizedBox(
+                    width: 130,
+                    height: 45,
+                    child: Image.asset("assets/images/houzylogoimage.png"),
+                  ),
+                ),
+                IconButton(
+                  icon: Image.asset('assets/images/notebook.png', height: 24),
+                  onPressed: () {
+                    showModalBottomSheet(
+                      context: context,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                      ),
+                      builder: (context) => _ongoingSubscriptionSheet(),
+                    );
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.shopping_cart),
+                  onPressed: () {},
+                ),
+                GestureDetector(
+                  onTap: () {
+                    showModalBottomSheet(
+                      context: context,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                      ),
+                      builder: (context) {
+                        return Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const SizedBox(height: 16),
+                            CircleAvatar(
+                              radius: 40,
+                              backgroundImage: user?.photoURL != null
+                                  ? NetworkImage(user!.photoURL!)
+                                  : const AssetImage('assets/images/placeholder.png') as ImageProvider,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              user?.email ?? 'No email',
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                            ),
+                            const SizedBox(height: 16),
+                            ListTile(
+                              leading: const Icon(Icons.person),
+                              title: const Text('Profile'),
+                              onTap: () {
+                                Navigator.pop(context);
+                                Navigator.pushNamed(context, '/account');
+                              },
+                            ),
+                            ListTile(
+                              leading: const Icon(Icons.logout, color: Colors.red),
+                              title: const Text('Sign Out', style: TextStyle(color: Colors.red)),
+                              onTap: () async {
+                                Navigator.pop(context);
+                                await FirebaseAuth.instance.signOut();
+                                Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                  child: CircleAvatar(
+                    radius: 18,
+                    backgroundImage: user?.photoURL != null
+                        ? NetworkImage(user!.photoURL!)
+                        : const AssetImage('assets/images/placeholder.png') as ImageProvider,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Shimmer.fromColors(
+              baseColor: Colors.grey[300]!,
+              highlightColor: Colors.grey[100]!,
+              child: Container(
+                width: double.infinity,
+                height: 150,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.white,
+                  image: const DecorationImage(
+                    image: AssetImage('assets/images/serviceimage1.png'),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
+                child: const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '#1 Super app for all\nhome services',
+                      style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            FadeInDown(
+              duration: const Duration(milliseconds: 800),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text("Professional", style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold)),
+                  const Text(
+                    "House Cleaning",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0XFFF54A00)),
+                  ),
+                  const Row(
+                    children: [
+                      Text("Service You Can ", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                      Text(
+                        "Trust",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Color.fromARGB(255, 34, 255, 96),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    "Book trusted, top-rated cleaners in your area. Flexible scheduling, eco-friendly products, and 100% satisfaction guaranteed.",
+                    style: TextStyle(color: Colors.black54, fontSize: 12),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      _infoBadge("Insured & Bonded", Icons.verified_user),
+                      const SizedBox(width: 15),
+                      _infoBadge("4.9★ Average Rating", Icons.star),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(children: [_infoBadge("Same Day Booking", Icons.flash_on)]),
+                  const SizedBox(height: 16),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.asset(
+                      'assets/images/servicesimage.png',
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _infoBadge(String label, IconData icon) {
+    return Container(
+      width: 140,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(6),
+        color: const Color(0xFFE6F4EA),
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 7),
+      child: Row(
         children: [
-          Row(
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(right: 62),
-                child: SizedBox(
-                  width: 130, // smaller width
-                  height: 45, // smaller height
-                  child: UiHelper.CustomImage(img: "houzylogoimage.png"),
-                ),
-              ),
-
-              IconButton(
-                icon: UiHelper.CustomImage(img: 'notebook.png'),
-                onPressed: () {
-                  showModalBottomSheet(
-                    context: context,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(16),
-                      ),
-                    ),
-                    builder: (context) => _ongoingSubscriptionSheet(),
-                  );
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.shopping_cart),
-                onPressed: () {
-                  // Handle cart logic here
-                },
-              ),
-              GestureDetector(
-                onTap: () {
-                  showModalBottomSheet(
-                    context: context,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(16),
-                      ),
-                    ),
-                    builder: (context) {
-                      return Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const SizedBox(height: 16),
-                          CircleAvatar(
-                            radius: 40,
-                            backgroundImage: user?.photoURL != null
-                                ? NetworkImage(user!.photoURL!)
-                                : const AssetImage(
-                                        'assets/images/placeholder.png',
-                                      )
-                                      as ImageProvider,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            user?.email ?? 'No email',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          ListTile(
-                            leading: const Icon(Icons.person),
-                            title: const Text('Profile'),
-                            onTap: () {
-                              Navigator.pop(context);
-                              Navigator.pushNamed(context, '/account');
-                            },
-                          ),
-                          ListTile(
-                            leading: const Icon(
-                              Icons.logout,
-                              color: Colors.red,
-                            ),
-                            title: const Text(
-                              'Sign Out',
-                              style: TextStyle(color: Colors.red),
-                            ),
-                            onTap: () async {
-                              Navigator.pop(context);
-                              await FirebaseAuth.instance.signOut();
-                              Navigator.of(context).pushNamedAndRemoveUntil(
-                                '/login',
-                                (route) => false,
-                              );
-                            },
-                          ),
-                          const SizedBox(height: 16),
-                        ],
-                      );
-                    },
-                  );
-                },
-                child: CircleAvatar(
-                  radius: 18,
-                  backgroundImage: user?.photoURL != null
-                      ? NetworkImage(user!.photoURL!)
-                      : const AssetImage('assets/images/placeholder.png')
-                            as ImageProvider,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 3),
-          const Text(
-            "Professional",
-            style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
-          ),
-          const Text(
-            "House Cleaning",
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Color(0XFFF54A00),
-            ),
-          ),
-          Row(
-            children: const [
-              Text(
-                "Service You Can ",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              Text(
-                "Trust",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Color.fromARGB(255, 34, 255, 96), // Light green
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 10),
-          const Text(
-            "Book trusted, top-rated cleaners in your area. Flexible scheduling, eco-friendly products, and 100% satisfaction guaranteed.",
-            style: TextStyle(color: Colors.black54, fontSize: 12),
-          ),
-          const SizedBox(height: 16),
-            Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Container(
-              width: 130,
-              decoration: BoxDecoration(
-                // border: Border.all(color: Colors.grey.shade300), // Removed border
-                borderRadius: BorderRadius.circular(6),
-                color: Color(0xFFE6F4EA), // Light green
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 7),
-              child: Row(
-                children: [
-                Icon(
-                  Icons.verified_user,
-                  color: Color(0XFFF54A00),
-                  size: 13,
-                ),
-                SizedBox(width: 2),
-                Flexible(
-                  child: Text(
-                  "Insured & Bonded",
-                  key: Key("insured_bonded"),
-                  style: TextStyle(fontSize: 9, color: Colors.black54),
-                  overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                ],
-              ),
-              ),
-              SizedBox(width: 15), // Decreased from 4 to 2 for less spacing
-              Container(
-              width: 150,
-              decoration: BoxDecoration(
-                // border: Border.all(color: Colors.grey.shade300), // Removed border
-                borderRadius: BorderRadius.circular(6),
-                color: Color(0xFFE6F4EA), // Light green
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 7),
-              child: Row(
-                children: [
-                Icon(Icons.star, color: Color(0XFFF54A00), size: 14),
-                SizedBox(width: 2),
-                Flexible(
-                  child: Text(
-                  "4.9★ Avgerage Rating",
-                  key: Key("avg_rating"),
-                  style: TextStyle(fontSize: 9, color: Colors.black54),
-                  overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                ],
-              ),
-              ),
-            ],
-            ),
-            const SizedBox(height: 6),
-            Row(
-            children: [
-              Container(
-              width: 140,
-              decoration: BoxDecoration(
-                // border: Border.all(color: Colors.grey.shade300), // Removed border
-                borderRadius: BorderRadius.circular(6),
-                color: Color(0xFFE6F4EA), // Light green
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 7),
-              child: Row(
-                children: [
-                Icon(Icons.flash_on, color: Color(0XFFF54A00), size: 13),
-                SizedBox(width: 2),
-                Flexible(
-                  child: Text(
-                  "Same Day Booking",
-                  key: Key("same_day_booking"),
-                  style: TextStyle(fontSize: 9, color: Colors.black54),
-                  overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                ],
-              ),
-              ),
-            ],
-            ),
-
-          const SizedBox(height: 16),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.asset(
-              'assets/images/servicesimage.png',
-              fit: BoxFit.cover,
-              width: double.infinity,
+          Icon(icon, color: Color(0XFFF54A00), size: 13),
+          const SizedBox(width: 2),
+          Flexible(
+            child: Text(
+              label,
+              style: const TextStyle(fontSize: 9, color: Colors.black54),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
       ),
     );
   }
+  
 
   Widget _buildServiceSelection() {
     return Padding(
