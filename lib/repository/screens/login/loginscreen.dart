@@ -147,26 +147,30 @@ class _LoginScreenState extends State<LoginScreen> {
                 Stack(
                   alignment: Alignment.center,
                   children: [
-                    UiHelper.CustomImage(img: "houzylogoimage.png", height: 80, width: null),
+                    SizedBox(
+                      width: 200,
+                      height: 80,
+                      child: UiHelper.CustomImage(img: "houzylogoimage.png"),
+                    ),
                     const Positioned(
                       top: -2,
                       left: 12,
-                      child: Icon(Icons.star, color: Colors.orange, size: 18),
+                      child: Icon(Icons.star, color: Color(0xFFFE600E), size: 18),
                     ),
                     const Positioned(
                       top: -3,
                       right: 20,
-                      child: Icon(Icons.star, color: Colors.amber, size: 20),
+                      child: Icon(Icons.star, color: Color(0xFFFE600E), size: 20),
                     ),
                     const Positioned(
                       bottom: 0,
                       left: 0,
-                      child: Icon(Icons.star, color: Colors.amberAccent, size: 16),
+                      child: Icon(Icons.star, color: Color(0xFFFE600E), size: 16),
                     ),
                     const Positioned(
                       bottom: 0,
                       right: 10,
-                      child: Icon(Icons.star, color: Colors.orange, size: 14),
+                      child: Icon(Icons.star, color: Color(0xFFFE600E), size: 14),
                     ),
                   ],
                 ),
@@ -175,12 +179,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   text: "Professional House Cleaning Service",
                   color: const Color(0xFFFE600E),
                   fontweight: FontWeight.bold,
-                  fontsize: 11,
+                  fontsize: 10,
                   fontfamily: "bold",
                 ),
-                const SizedBox(height: 10),
-
-                // New Buttons
+                const SizedBox(height: 5),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -188,7 +190,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: () => setState(() => isCustomer = true),
                       child: const Text("Customer"),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: isCustomer ? Colors.orange : Colors.grey,
+                        backgroundColor: isCustomer ? Color(0xFFFE600E) : Colors.grey,
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -196,17 +198,16 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: () => setState(() => isCustomer = false),
                       child: const Text("Employee"),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: !isCustomer ? Colors.orange : Colors.grey,
+                        backgroundColor: !isCustomer ? Color(0xFFFE600E) : Colors.grey,
                       ),
                     ),
                   ],
                 ),
-
-                const SizedBox(height: 20),
+                const SizedBox(height: 5),
                 Card(
                   elevation: 4,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Container(
                     width: double.infinity,
@@ -215,7 +216,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       color: const Color(0XFFe7dfdd),
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.all(20.0),
+                      padding: const EdgeInsets.all(10.0),
                       child: Column(
                         children: [
                           Center(
@@ -223,24 +224,18 @@ class _LoginScreenState extends State<LoginScreen> {
                               text: "Login",
                               color: Colors.black,
                               fontweight: FontWeight.w500,
-                              fontsize: 32,
+                              fontsize: 20,
                               fontfamily: "bold",
                             ),
                           ),
                           const SizedBox(height: 20),
-                          SizedBox(
-                            height: 200,
-                            child: Align(
-                              alignment: const Alignment(0.1, 0.0),
-                              child: Transform.translate(
-                                offset: const Offset(15, 0),
-                                child: UiHelper.CustomImage(img: "loginsvg.png", height: null, width: null),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-
                           if (isCustomer) ...[
+                            Transform.translate(
+  offset: const Offset(33,0), // X: right shift, Y: vertical shift
+  child: UiHelper.CustomImage(img: "loginsvg.png"),
+),
+
+                            const SizedBox(height: 10),
                             SizedBox(
                               height: 48,
                               width: double.infinity,
@@ -254,48 +249,79 @@ class _LoginScreenState extends State<LoginScreen> {
                                 label: _isLoading
                                     ? const CircularProgressIndicator()
                                     : const Text(
-                                  "Sign in with Google",
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 12,
-                                  ),
-                                ),
+                                        "Sign in with Google",
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.white,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(10),
                                   ),
-                                  elevation: 2,
+                                  elevation: 3,
                                 ),
                               ),
                             ),
                           ] else ...[
-                            TextField(
-                              controller: _employeeIdController,
-                              decoration: const InputDecoration(labelText: "Employee ID"),
-                            ),
-                            TextField(
-                              controller: _employeePasswordController,
-                              decoration: const InputDecoration(labelText: "Password"),
-                              obscureText: true,
-                            ),
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: TextButton(
-                                onPressed: _handleForgotPassword,
-                                child: const Text("Forgot Password?"),
+                            Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                color: const Color(0XFFe7dfdd),
                               ),
-                            ),
-                            ElevatedButton(
-                              onPressed: _handleEmployeeLogin,
-                              child: const Text("Login"),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.orange,
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                              child: Column(
+                                children: [
+                                  Transform.translate(
+  offset: const Offset(33,0), // X: right shift, Y: vertical shift
+  child: UiHelper.CustomImage(img: "customerimage.png"),
+),
+                                  TextField(
+                                    controller: _employeeIdController,
+                                    decoration: const InputDecoration(
+                                      labelText: "Employee ID",
+                                      prefixIcon: Icon(Icons.badge),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 1),
+                                  TextField(
+                                    controller: _employeePasswordController,
+                                    decoration: const InputDecoration(
+                                      labelText: "Password",
+                                      prefixIcon: Icon(Icons.lock),
+                                    ),
+                                    obscureText: true,
+                                  ),
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    child: TextButton(
+                                      onPressed: _handleForgotPassword,
+                                      child: const Text("Forgot Password?"),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 1),
+                                  SizedBox(
+                                    height: 48,
+                                    width: double.infinity,
+                                    child: ElevatedButton(
+                                      onPressed: _handleEmployeeLogin,
+                                      child: const Text("Login", style: TextStyle(fontWeight: FontWeight.bold)),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Color(0xFFFE600E),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 1),
                           Center(
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 8.0),

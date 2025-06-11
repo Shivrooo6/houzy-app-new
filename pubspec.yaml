@@ -57,6 +57,7 @@ flutter:
     - assets/images/store.png
     - assets/images/user.png
     - assets/images/serviceimage1.png
+    - assets/images/customerimage.png
 
   fonts:
     - family: bold

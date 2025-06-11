@@ -1,20 +1,87 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:shimmer/shimmer.dart';
+import 'package:houzy/repository/widgets/uihelper.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart'; // ✅ Import geocoding package
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  String _location = "Select your location";
+
+  Future<void> _getCurrentLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Location services are disabled.')),
+      );
+      return;
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Location permission denied')),
+        );
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Location permissions are permanently denied.')),
+      );
+      return;
+    }
+
+    final Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+
+    try {
+      List<Placemark> placemarks =
+          await placemarkFromCoordinates(position.latitude, position.longitude);
+
+      if (placemarks.isNotEmpty) {
+        Placemark place = placemarks.first;
+        setState(() {
+          _location = place.locality ?? place.subAdministrativeArea ?? "Location found";
+        });
+      } else {
+        setState(() {
+          _location = "Unknown location";
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _location = "Error fetching location";
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
     return Scaffold(
       backgroundColor: Colors.grey[100],
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             children: [
-              _buildTopHeader(context),
+              _buildTopHeader(context, user),
+              _headerImage(),
+              _locationCard(),
               _buildServiceSelection(),
               _buildTestimonials(),
               _buildFooter(),
@@ -25,180 +92,95 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTopHeader(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-
+  Widget _buildTopHeader(BuildContext context, User? user) {
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [Color(0xFF00AEEF), Color(0xFFF54A00)],
+          colors: [Colors.white, Colors.white],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            Row(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(right: 62),
-                  child: SizedBox(
-                    width: 130,
-                    height: 45,
-                    child: Image.asset("assets/images/houzylogoimage.png"),
-                  ),
-                ),
-                IconButton(
-                  icon: Image.asset('assets/images/notebook.png', height: 24),
-                  onPressed: () {
-                    showModalBottomSheet(
-                      context: context,
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-                      ),
-                      builder: (context) => _ongoingSubscriptionSheet(),
-                    );
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.shopping_cart),
-                  onPressed: () {},
-                ),
-                GestureDetector(
-                  onTap: () {
-                    showModalBottomSheet(
-                      context: context,
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-                      ),
-                      builder: (context) {
-                        return Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const SizedBox(height: 16),
-                            CircleAvatar(
-                              radius: 40,
-                              backgroundImage: user?.photoURL != null
-                                  ? NetworkImage(user!.photoURL!)
-                                  : const AssetImage('assets/images/placeholder.png') as ImageProvider,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              user?.email ?? 'No email',
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                            ),
-                            const SizedBox(height: 16),
-                            ListTile(
-                              leading: const Icon(Icons.person),
-                              title: const Text('Profile'),
-                              onTap: () {
-                                Navigator.pop(context);
-                                Navigator.pushNamed(context, '/account');
-                              },
-                            ),
-                            ListTile(
-                              leading: const Icon(Icons.logout, color: Colors.red),
-                              title: const Text('Sign Out', style: TextStyle(color: Colors.red)),
-                              onTap: () async {
-                                Navigator.pop(context);
-                                await FirebaseAuth.instance.signOut();
-                                Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
-                              },
-                            ),
-                            const SizedBox(height: 16),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                  child: CircleAvatar(
-                    radius: 18,
-                    backgroundImage: user?.photoURL != null
-                        ? NetworkImage(user!.photoURL!)
-                        : const AssetImage('assets/images/placeholder.png') as ImageProvider,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Shimmer.fromColors(
-              baseColor: Colors.grey[300]!,
-              highlightColor: Colors.grey[100]!,
-              child: Container(
-                width: double.infinity,
-                height: 150,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  color: Colors.white,
-                  image: const DecorationImage(
-                    image: AssetImage('assets/images/serviceimage1.png'),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
-                child: const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '#1 Super app for all\nhome services',
-                      style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
+            Padding(
+              padding: const EdgeInsets.only(right: 62),
+              child: SizedBox(
+                width: 130,
+                height: 45,
+                child: Image.asset("assets/images/houzylogoimage.png"),
               ),
             ),
-            const SizedBox(height: 24),
-            FadeInDown(
-              duration: const Duration(milliseconds: 800),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text("Professional", style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold)),
-                  const Text(
-                    "House Cleaning",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0XFFF54A00)),
+            IconButton(
+              icon: Image.asset('assets/images/notebook.png', height: 24),
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
                   ),
-                  const Row(
-                    children: [
-                      Text("Service You Can ", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                      Text(
-                        "Trust",
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Color.fromARGB(255, 34, 255, 96),
+                  builder: (context) => _ongoingSubscriptionSheet(),
+                );
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.shopping_cart),
+              onPressed: () {},
+            ),
+            GestureDetector(
+              onTap: () {
+                showModalBottomSheet(
+                  context: context,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                  ),
+                  builder: (context) {
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const SizedBox(height: 16),
+                        CircleAvatar(
+                          radius: 40,
+                          backgroundImage: user?.photoURL != null
+                              ? NetworkImage(user!.photoURL!)
+                              : const AssetImage('assets/images/placeholder.png') as ImageProvider,
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  const Text(
-                    "Book trusted, top-rated cleaners in your area. Flexible scheduling, eco-friendly products, and 100% satisfaction guaranteed.",
-                    style: TextStyle(color: Colors.black54, fontSize: 12),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      _infoBadge("Insured & Bonded", Icons.verified_user),
-                      const SizedBox(width: 15),
-                      _infoBadge("4.9★ Average Rating", Icons.star),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Row(children: [_infoBadge("Same Day Booking", Icons.flash_on)]),
-                  const SizedBox(height: 16),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.asset(
-                      'assets/images/servicesimage.png',
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                    ),
-                  ),
-                ],
+                        const SizedBox(height: 8),
+                        Text(
+                          user?.email ?? 'No email',
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                        ),
+                        const SizedBox(height: 16),
+                        ListTile(
+                          leading: const Icon(Icons.person),
+                          title: const Text('Profile'),
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.pushNamed(context, '/account');
+                          },
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.logout, color: Colors.red),
+                          title: const Text('Sign Out', style: TextStyle(color: Colors.red)),
+                          onTap: () async {
+                            Navigator.pop(context);
+                            await FirebaseAuth.instance.signOut();
+                            Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                    );
+                  },
+                );
+              },
+              child: CircleAvatar(
+                radius: 18,
+                backgroundImage: user?.photoURL != null
+                    ? NetworkImage(user!.photoURL!)
+                    : const AssetImage('assets/images/placeholder.png') as ImageProvider,
               ),
             ),
           ],
@@ -207,133 +189,84 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _infoBadge(String label, IconData icon) {
-    return Container(
-      width: 140,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(6),
-        color: const Color(0xFFE6F4EA),
-      ),
-      padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 7),
-      child: Row(
-        children: [
-          Icon(icon, color: Color(0XFFF54A00), size: 13),
-          const SizedBox(width: 2),
-          Flexible(
-            child: Text(
-              label,
-              style: const TextStyle(fontSize: 9, color: Colors.black54),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
+  Widget _headerImage() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Image.asset(
+          'assets/images/serviceimage1.png',
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: 180,
+        ),
       ),
     );
   }
-  
+
+  Widget _locationCard() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: GestureDetector(
+        onTap: _getCurrentLocation,
+        child: Row(
+          children: [
+            const Icon(Icons.location_on, color: Colors.deepOrange),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                _location,
+                style: const TextStyle(fontSize: 16),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _buildServiceSelection() {
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center, // Center align all items
-        children: [
-          const Center(
-            child: Text(
-              "Choose Your Cleaning Service",
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'Poppins',
+      child: GridView.count(
+        crossAxisCount: 4,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+        children: List.generate(8, (index) {
+          return Column(
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.orange[50],
+                  shape: BoxShape.circle,
+                ),
+                padding: const EdgeInsets.all(12),
+                child: const Icon(Icons.cleaning_services, color: Colors.deepOrange),
               ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          const SizedBox(height: 4),
-          const Center(
-            child: Text(
-              "Select the perfect cleaning service for your needs",
-              textAlign: TextAlign.center,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 500),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  ServiceCard(
-                    serviceTitle: "Apartment Cleaning",
-                    serviceDescription: "2BHK / 3BHK / Villa",
-                    price: "149",
-                    duration: "2-3 hours approx",
-                    features: [
-                      "Sweeping, Mopping, Dusting",
-                      "Bathroom & Kitchen Cleaning",
-                      "Balcony Cleaning",
-                    ],
-                    isPopular: true,
-                    imagePath: "assets/images/cleaning.png",
-                  ),
-                  ServiceCard(
-                    serviceTitle: "Apartment Cleaning",
-                    serviceDescription: "2BHK / 3BHK / Villa",
-                    price: "149",
-                    duration: "2-3 hours approx",
-                    features: [
-                      "Sweeping, Mopping, Dusting",
-                      "Bathroom & Kitchen Cleaning",
-                      "Balcony Cleaning",
-                    ],
-                    isPopular: true,
-                    imagePath: "assets/images/cleaning.png",
-                  ),
-                  ServiceCard(
-                    serviceTitle: "Apartment Cleaning",
-                    serviceDescription: "2BHK / 3BHK / Villa",
-                    price: "149",
-                    duration: "2-3 hours approx",
-                    features: [
-                      "Sweeping, Mopping, Dusting",
-                      "Bathroom & Kitchen Cleaning",
-                      "Balcony Cleaning",
-                    ],
-                    isPopular: true,
-                    imagePath: "assets/images/cleaning.png",
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+              const SizedBox(height: 4),
+              const Text("Service", style: TextStyle(fontSize: 12)),
+            ],
+          );
+        }),
       ),
     );
   }
 
   Widget _buildTestimonials() {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            "What Our Customers Say",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
-          _TestimonialCard(
-            name: "Sarah Johnson",
-            text:
-                "Amazing service! My house has never been cleaner. The team is professional and thorough.",
-            stars: 5,
-          ),
-          _TestimonialCard(
-            name: "Mike Chen",
-            text:
-                "Love the convenience and quality. They work around my schedule perfectly.",
-            stars: 5,
-          ),
+        children: const [
+          Text("What Our Customers Say",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          SizedBox(height: 12),
+          Text("⭐️⭐️⭐️⭐️⭐️ – Excellent service and very professional."),
+          SizedBox(height: 8),
+          Text("⭐️⭐️⭐️⭐️⭐️ – My house looks spotless, booking was easy!"),
         ],
       ),
     );
@@ -341,458 +274,21 @@ class HomeScreen extends StatelessWidget {
 
   Widget _buildFooter() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 1),
+      padding: const EdgeInsets.symmetric(vertical: 24),
       child: Column(
         children: const [
-          SizedBox(height: 8),
-          Text(
-            "Houzy",
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-              color: Color(0XFFF54A00),
-            ),
-          ),
+          Text("Houzy © 2025", style: TextStyle(color: Colors.grey)),
           SizedBox(height: 4),
-          Text("Professional cleaning services you can trust"),
-          SizedBox(height: 2),
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 4,
-            children: [
-              Text(" Privacy Policy"),
-              Text("•"),
-              Text("Terms of Service"),
-              Text("• Contact Us"),
-            ],
-          ),
-          SizedBox(height: 10),
+          Text("All rights reserved.", style: TextStyle(color: Colors.grey, fontSize: 12)),
         ],
       ),
     );
   }
-}
 
-class ServiceCard extends StatelessWidget {
-  final String serviceTitle;
-  final String serviceDescription;
-  final String price;
-  final String duration;
-  final List<String> features;
-  final bool isPopular;
-  final String imagePath;
-
-  const ServiceCard({
-    super.key,
-    required this.serviceTitle,
-    required this.serviceDescription,
-    required this.price,
-    required this.duration,
-    required this.features,
-    this.isPopular = false,
-    required this.imagePath,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _ongoingSubscriptionSheet() {
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 12),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: const Color.fromARGB(255, 255, 114, 54)),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.shade100,
-            spreadRadius: 2,
-            blurRadius: 5,
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (isPopular)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF54A00),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Text(
-                "Most Popular",
-                style: TextStyle(color: Colors.white, fontSize: 10),
-              ),
-            ),
-          const SizedBox(height: 12),
-
-          // ✅ Display Image Here
-          Center(
-            child: Image.asset('assets/images/house.png',
-              // Use the imagePath variable if you want to make it dynamic
-              // imagePath: imagePath,
-              // If you want to use a network image, you can use NetworkImage instead   
-              height: 30,
-              width: 30,
-              fit: BoxFit.contain,
-            ),
-            ),
-
-          const SizedBox(height: 10),
-          Center(
-            child: Text(
-              serviceTitle,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Center(
-            child: Text(
-              serviceDescription,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Center(
-            child: Text(
-              "Starting at \$$price",
-              style: const TextStyle(
-                color: Color(0XFFF54A00),
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          Center(
-            child: Text(
-              duration,
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-            ),
-          ),
-          const SizedBox(height: 12),
-            Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: features
-              .map(
-                (f) => Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                    f,
-                    style: TextStyle(color: Colors.grey.shade700, fontSize: 15),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    textScaleFactor: 0.9,
-                    // Adjust text scale factor for smaller text
-                    textAlign: TextAlign.center,
-                    ),
-                  ),
-                  ],
-                ),
-                ),
-              )
-              .toList(),
-            ),
-          const SizedBox(height: 12),
-          ElevatedButton(
-            onPressed: () {
-              _showBottomDrawer(context, serviceTitle, features, imagePath);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0XFFF54A00),
-              minimumSize: const Size.fromHeight(45),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: const Text("Select Service"),
-          ),
-        ],
-      ),
+      child: const Text("No ongoing subscriptions"),
     );
   }
-
-  void _showBottomDrawer(
-    BuildContext context,
-    String title,
-    List<String> features,
-    String imagePath,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return Container(
-          height: MediaQuery.of(context).size.height * 0.95,
-          decoration: const BoxDecoration(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-            color: Colors.transparent,
-          ),
-          child: Stack(
-            children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(20),
-                ),
-                child: Image.asset(
-                  imagePath,
-                  height: double.infinity,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
-              ),
-              Positioned.fill(
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(20),
-                    ),
-                    color: Colors.black.withOpacity(0.4),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 20),
-                    Center(
-                      child: Container(
-                        height: 5,
-                        width: 50,
-                        decoration: BoxDecoration(
-                          color: Colors.white60,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.5),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            title,
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: const [
-                              Text(
-                                "Rating: ",
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              Icon(Icons.star, color: Colors.green, size: 18),
-                              SizedBox(width: 4),
-                              Text(
-                                "4.9",
-                                style: TextStyle(color: Colors.green),
-                              ),
-                              SizedBox(width: 4),
-                              Text("(28k)"),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          const Text(
-                            "Daily cleaning for your entire apartment\nLorem ipsum dolor sit amet consectetur adipisicing elit. Dicta atque laudantium aliquid perferendis sint fuga consequuntur iste, mollitia hic sed ipsam nisi.",
-                            style: TextStyle(fontSize: 13),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Spacer(),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0XFFF54A00),
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                            ),
-                            child: const Text("Book Now"),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                            },
-                            style: OutlinedButton.styleFrom(
-                              side: const BorderSide(color: Colors.white),
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                            ),
-                            child: const Text(
-                              "Need Time",
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-
-class _TestimonialCard extends StatelessWidget {
-  final String name;
-  final String text;
-  final int stars;
-
-  const _TestimonialCard({
-    required this.name,
-    required this.text,
-    required this.stars,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: List.generate(
-                stars,
-                (_) =>
-                    const Icon(Icons.star, color: Color(0XFFF54A00), size: 16),
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text('"$text"'),
-            const SizedBox(height: 6),
-            Text(
-              "- $name",
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-Widget _ongoingSubscriptionSheet() {
-  return Padding(
-    padding: const EdgeInsets.all(16.0),
-    child: ConstrainedBox(
-      constraints: BoxConstraints(
-        maxHeight: 400, // limit height so it won't overflow the screen
-      ),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "Currently Ongoing Subscription",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 6),
-            const Text("All Current ongoing subscriptions comes here"),
-            const SizedBox(height: 12),
-            ...List.generate(3, (index) {
-              return Card(
-                margin: const EdgeInsets.symmetric(vertical: 6),
-                child: ListTile(
-                  title: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text("Service Name"),
-                      SizedBox(height: 15),
-                      Text("Card Content", style: TextStyle(fontSize: 12)),
-                    ],
-                  ),
-                  trailing: ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFF54A00),
-                      minimumSize: const Size(
-                        80,
-                        32,
-                      ), // smaller width and height
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ), // adjust padding if needed
-                    ),
-                    child: const Text(
-                      "Detailed View",
-                      style: TextStyle(fontSize: 12), // smaller text size
-                    ),
-                  ),
-                ),
-              );
-            }),
-
-            const SizedBox(height: 6),
-            ...List.generate(3, (index) {
-              return Card(
-                margin: const EdgeInsets.symmetric(vertical: 6),
-                child: ListTile(
-                  title: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text("Service Name"),
-                      SizedBox(height: 15), // Add vertical space here
-                      Text("Card Content", style: TextStyle(fontSize: 12)),
-                    ],
-                  ),
-                  trailing: ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFF54A00),
-                      minimumSize: const Size(
-                        80,
-                        32,
-                      ), // smaller width and height
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ), // adjust padding if needed
-                    ),
-                    child: const Text(
-                      "Detailed View",
-                      style: TextStyle(fontSize: 12), // smaller text size
-                    ),
-                  ),
-                ),
-              );
-            }),
-          ],
-        ),
-      ),
-    ),
-  );
 }
