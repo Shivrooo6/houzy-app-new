@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:houzy/repository/widgets/uihelper.dart';
-import 'package:animate_do/animate_do.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart'; // ✅ Import geocoding package
+import 'package:geocoding/geocoding.dart'; 
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -92,6 +90,28 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+
+    Widget _locationCard() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: GestureDetector(
+        onTap: _getCurrentLocation,
+        child: Row(
+          children: [
+            const Icon(Icons.location_on, color: Colors.deepOrange),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                _location,
+                style: const TextStyle(fontSize: 16),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
   Widget _buildTopHeader(BuildContext context, User? user) {
     return Container(
       decoration: const BoxDecoration(
@@ -204,75 +224,132 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _locationCard() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: GestureDetector(
-        onTap: _getCurrentLocation,
-        child: Row(
-          children: [
-            const Icon(Icons.location_on, color: Colors.deepOrange),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                _location,
-                style: const TextStyle(fontSize: 16),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+
 
   Widget _buildServiceSelection() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: GridView.count(
-        crossAxisCount: 4,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        children: List.generate(8, (index) {
-          return Column(
-            children: [
-              Container(
+  return Padding(
+    padding: const EdgeInsets.all(16),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        const Center(
+          child: Text(
+            "Choose Your Cleaning Service",
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Poppins',
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        const SizedBox(height: 4),
+        const Center(
+          child: Text(
+            "Select the perfect cleaning service for your needs",
+            textAlign: TextAlign.center,
+          ),
+        ),
+        const SizedBox(height: 16),
+        GridView.count(
+          crossAxisCount: 3,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 0.9,
+          children: List.generate(6, (index) {
+            return GestureDetector(
+              onTap: () {
+                _showBottomDrawer(
+                  context,
+                  "Apartment Cleaning",
+                  [
+                    "Sweeping, Mopping, Dusting",
+                    "Bathroom & Kitchen Cleaning",
+                    "Balcony Cleaning",
+                  ],
+                  "assets/images/cleaning.png",
+                );
+              },
+              child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.orange[50],
-                  shape: BoxShape.circle,
+                  color: Colors.white,
+                  border: Border.all(color: Colors.orange.shade200),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.1),
+                      spreadRadius: 1,
+                      blurRadius: 5,
+                    ),
+                  ],
                 ),
-                padding: const EdgeInsets.all(12),
-                child: const Icon(Icons.cleaning_services, color: Colors.deepOrange),
+                padding: const EdgeInsets.all(10),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFFFF3E0),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.cleaning_services, color: Colors.deepOrange, size: 28),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      "Apartment Cleaning",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      "2-3 hrs approx",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 10, color: Colors.grey),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 4),
-              const Text("Service", style: TextStyle(fontSize: 12)),
-            ],
-          );
-        }),
-      ),
-    );
-  }
+            );
+          }),
+        ),
+      ],
+    ),
+  );
+}
+
 
   Widget _buildTestimonials() {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: const [
-          Text("What Our Customers Say",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          Text(
+            "What Our Customers Say",
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
           SizedBox(height: 12),
-          Text("⭐️⭐️⭐️⭐️⭐️ – Excellent service and very professional."),
-          SizedBox(height: 8),
-          Text("⭐️⭐️⭐️⭐️⭐️ – My house looks spotless, booking was easy!"),
+          _TestimonialCard(
+            name: "Sarah Johnson",
+            text:
+                "Amazing service! My house has never been cleaner. The team is professional and thorough.",
+            stars: 5,
+          ),
+          _TestimonialCard(
+            name: "Mike Chen",
+            text:
+                "Love the convenience and quality. They work around my schedule perfectly.",
+            stars: 5,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildFooter() {
+ Widget _buildFooter() {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 24),
       child: Column(
@@ -284,11 +361,189 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
   Widget _ongoingSubscriptionSheet() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: const Text("No ongoing subscriptions"),
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxHeight: 400),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Currently Ongoing Subscription",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 6),
+              const Text("All Current ongoing subscriptions comes here"),
+              const SizedBox(height: 12),
+              ...List.generate(3, (index) {
+                return Card(
+                  margin: const EdgeInsets.symmetric(vertical: 6),
+                  child: ListTile(
+                    title: const Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("Service Name"),
+                        SizedBox(height: 15),
+                        Text("Card Content", style: TextStyle(fontSize: 12)),
+                      ],
+                    ),
+                    trailing: ElevatedButton(
+                      onPressed: () {},
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFF54A00),
+                        minimumSize: const Size(80, 32),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      ),
+                      child: const Text("Detailed View", style: TextStyle(fontSize: 12)),
+                    ),
+                  ),
+                );
+              }),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showBottomDrawer(BuildContext context, String serviceTitle, List<String> features, String imagePath) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(serviceTitle, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Image.asset(imagePath, width: 100, height: 100),
+              const SizedBox(height: 12),
+              ...features.map((feature) => Text("• $feature")).toList(),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFF54A00),
+                  minimumSize: const Size.fromHeight(45),
+                ),
+                child: const Text("Book Now"),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
+class ServiceCard extends StatelessWidget {
+  final String serviceTitle;
+  final String serviceDescription;
+  final String price;
+  final String duration;
+  final List<String> features;
+  final bool isPopular;
+  final String imagePath;
+
+  const ServiceCard({
+    super.key,
+    required this.serviceTitle,
+    required this.serviceDescription,
+    required this.price,
+    required this.duration,
+    required this.features,
+    this.isPopular = false,
+    required this.imagePath,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: const Color.fromARGB(255, 255, 114, 54)),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(color: Colors.grey.shade100, spreadRadius: 2, blurRadius: 5),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          if (isPopular)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF54A00),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Text("Most Popular", style: TextStyle(color: Colors.white, fontSize: 10)),
+            ),
+          const SizedBox(height: 12),
+          Center(
+            child: Image.asset(imagePath, width: 100, height: 100, fit: BoxFit.contain),
+          ),
+          const SizedBox(height: 10),
+          Text(serviceTitle, textAlign: TextAlign.center, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          Text(serviceDescription, textAlign: TextAlign.center, style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+          const SizedBox(height: 12),
+          Text("Starting at \$$price", style: const TextStyle(color: Color(0XFFF54A00), fontSize: 13, fontWeight: FontWeight.bold)),
+          Text(duration, style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+          const SizedBox(height: 12),
+          ...features.map(
+            (f) => Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Text(f, textAlign: TextAlign.center, style: TextStyle(color: Colors.grey.shade700, fontSize: 15)),
+            ),
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            onPressed: () {
+              final state = context.findAncestorStateOfType<_HomeScreenState>();
+              state?._showBottomDrawer(context, serviceTitle, features, imagePath);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0XFFF54A00),
+              minimumSize: const Size.fromHeight(45),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text("Select Service"),
+          ),
+        ],
+      ),
+    );
+  }
+}
+class _TestimonialCard extends StatelessWidget {
+  final String name;
+  final String text;
+  final int stars;
+
+  const _TestimonialCard({
+    required this.name,
+    required this.text,
+    required this.stars,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      title: Text(name),
+      subtitle: Text(text),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: List.generate(stars, (_) => const Icon(Icons.star, color: Colors.amber, size: 16)),
+      ),
+    );
+  }
+}
+
+

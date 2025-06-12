@@ -148,7 +148,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   alignment: Alignment.center,
                   children: [
                     SizedBox(
-                      width: 200,
+                      width: 350,
                       height: 80,
                       child: UiHelper.CustomImage(img: "houzylogoimage.png"),
                     ),
@@ -321,7 +321,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                           ],
-                          const SizedBox(height: 1),
+                          const SizedBox(height: 10),
                           Center(
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 8.0),
