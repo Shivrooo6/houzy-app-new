@@ -73,6 +73,104 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       setState(() => isLoading = false);
     }
   }
+  Widget _buildLoadingOverlay() {
+    return BackdropFilter(
+      filter: ImageFilter.blur(sigmaX: 6.0, sigmaY: 6.0),
+      child: Container(
+        color: Colors.black.withOpacity(0.4),
+        child: const Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopHeader(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 45, vertical: 8),
+      child: Row(
+        children: [
+          Image.asset('assets/images/houzylogoimage.png', height: 40,),
+          const Spacer(),
+          IconButton(
+            icon: const Icon(Icons.note_alt_outlined),
+            onPressed: () {
+              _showBookingBottomSheet(context: context);
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.shopping_cart_outlined),
+            onPressed: () {
+              // TODO: Cart logic
+            },
+          ),
+          GestureDetector(
+            onTap: () {
+              showModalBottomSheet(
+                context: context,
+                shape: const RoundedRectangleBorder(
+                  borderRadius:
+                      BorderRadius.vertical(top: Radius.circular(16)),
+                ),
+                builder: (context) {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(height: 16),
+                      CircleAvatar(
+                        radius: 40,
+                        backgroundImage: user?.photoURL != null
+                            ? NetworkImage(user!.photoURL!)
+                            : const AssetImage('assets/images/placeholder.png')
+                                as ImageProvider,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        user?.email ?? 'No email',
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w500),
+                      ),
+                      const SizedBox(height: 16),
+                      ListTile(
+                        leading: const Icon(Icons.person),
+                        title: const Text('Profile'),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.pushNamed(context, '/account');
+                        },
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.logout, color: Colors.red),
+                        title: const Text('Sign Out',
+                            style: TextStyle(color: Colors.red)),
+                        onTap: () async {
+                          Navigator.pop(context);
+                          await FirebaseAuth.instance.signOut();
+                          Navigator.of(context).pushNamedAndRemoveUntil(
+                              '/login', (route) => false);
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  );
+                },
+              );
+            },
+            child: CircleAvatar(
+              radius: 18,
+              backgroundImage: user?.photoURL != null
+                  ? NetworkImage(user!.photoURL!)
+                  : const AssetImage('assets/images/placeholder.png')
+                      as ImageProvider,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -87,12 +185,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 Stack(
                   children: [
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(0),
                       child: Stack(
                         children: [
                           Image.asset(
                             'assets/images/serviceimage1.png',
-                            width: 350,
+                            width: 390,
                             height: 390,
                             fit: BoxFit.cover,
                           ),
@@ -223,104 +321,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildLoadingOverlay() {
-    return BackdropFilter(
-      filter: ImageFilter.blur(sigmaX: 6.0, sigmaY: 6.0),
-      child: Container(
-        color: Colors.black.withOpacity(0.4),
-        child: const Center(
-          child: CircularProgressIndicator(color: Colors.white),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTopHeader(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Image.asset('assets/images/houzylogoimage.png', height: 30),
-          const Spacer(),
-          IconButton(
-            icon: const Icon(Icons.note_alt_outlined),
-            onPressed: () {
-              _showBookingBottomSheet(context: context);
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.shopping_cart_outlined),
-            onPressed: () {
-              // TODO: Cart logic
-            },
-          ),
-          GestureDetector(
-            onTap: () {
-              showModalBottomSheet(
-                context: context,
-                shape: const RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.vertical(top: Radius.circular(16)),
-                ),
-                builder: (context) {
-                  return Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const SizedBox(height: 16),
-                      CircleAvatar(
-                        radius: 40,
-                        backgroundImage: user?.photoURL != null
-                            ? NetworkImage(user!.photoURL!)
-                            : const AssetImage('assets/images/placeholder.png')
-                                as ImageProvider,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        user?.email ?? 'No email',
-                        style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w500),
-                      ),
-                      const SizedBox(height: 16),
-                      ListTile(
-                        leading: const Icon(Icons.person),
-                        title: const Text('Profile'),
-                        onTap: () {
-                          Navigator.pop(context);
-                          Navigator.pushNamed(context, '/account');
-                        },
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.logout, color: Colors.red),
-                        title: const Text('Sign Out',
-                            style: TextStyle(color: Colors.red)),
-                        onTap: () async {
-                          Navigator.pop(context);
-                          await FirebaseAuth.instance.signOut();
-                          Navigator.of(context).pushNamedAndRemoveUntil(
-                              '/login', (route) => false);
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-                  );
-                },
-              );
-            },
-            child: CircleAvatar(
-              radius: 18,
-              backgroundImage: user?.photoURL != null
-                  ? NetworkImage(user!.photoURL!)
-                  : const AssetImage('assets/images/placeholder.png')
-                      as ImageProvider,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
+  
  void _showBookingBottomSheet({required BuildContext context}) {
   showModalBottomSheet(
     context: context,

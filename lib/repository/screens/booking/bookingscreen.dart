@@ -1,60 +1,120 @@
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
-class BookingScreen extends StatelessWidget {
+class BookingScreen extends StatefulWidget {
   const BookingScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildTopHeader(context),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Full Home Cleaning',
-                  
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Row(
-                  children: [
-                    Icon(Icons.star, color: Colors.orange, size: 18),
-                    SizedBox(width: 4),
-                    Text("4.9 (28k bookings)", style: TextStyle(fontSize: 14)),
-                  ],
-                ),
-              ),
-            ),
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "Monthly Subscription",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                ),
-              ),
-            ),
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: 6,
-                itemBuilder: (context, index) => _bookingCard(),
-              ),
-            ),
-          ],
-        ),
+  State<BookingScreen> createState() => _BookingScreenState();
+}
+
+class _BookingScreenState extends State<BookingScreen> {
+  int selectedSizeIndex = 1;
+  bool isPetFriendly = false;
+  TextEditingController specialInstructionsController = TextEditingController();
+
+  DateTime? selectedDate;
+  String? selectedTimeSlot;
+
+  final List<String> allTimeSlots = [
+    '8:00 AM',
+    '9:00 AM',
+    '10:00 AM',
+    '11:00 AM',
+    '12:00 PM',
+    '1:00 PM',
+    '2:00 PM',
+    '3:00 PM',
+  ];
+
+  final List<String> bookedSlots = ['10:00 AM', '2:00 PM'];
+
+  final List<Map<String, dynamic>> homeSizes = [
+    {'label': 'Studio (< 500 sq ft)', 'price': 62},
+    {'label': '1 BHK (500-800 sq ft)', 'price': 89},
+    {'label': '2 BHK (800-1200 sq ft)', 'price': 125},
+    {'label': '3 BHK (1200-1800 sq ft)', 'price': 160},
+    {'label': '4+ BHK (1800+ sq ft)', 'price': 205},
+  ];
+
+  void _showDatePickerSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text("Select a Date", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              CalendarDatePicker(
+                initialDate: DateTime.now(),
+                firstDate: DateTime.now(),
+                lastDate: DateTime(2030),
+                onDateChanged: (date) {
+                  setState(() => selectedDate = date);
+                  Navigator.pop(context);
+                  _showTimePickerSheet();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showTimePickerSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("Select Time Slot for ${DateFormat('MMMM d, yyyy').format(selectedDate!)}",
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              const SizedBox(height: 12),
+              GridView.count(
+                shrinkWrap: true,
+                crossAxisCount: 2,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
+                childAspectRatio: 3,
+                children: allTimeSlots.map((slot) {
+                  bool isBooked = bookedSlots.contains(slot);
+                  return ElevatedButton(
+                    onPressed: isBooked
+                        ? null
+                        : () {
+                            setState(() => selectedTimeSlot = slot);
+                            Navigator.pop(context);
+                          },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isBooked ? Colors.grey[300] : Colors.orange,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: Text(isBooked ? "$slot\nBooked" : slot, textAlign: TextAlign.center),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -67,18 +127,7 @@ class BookingScreen extends StatelessWidget {
         children: [
           Image.asset('assets/images/houzylogoimage.png', height: 30),
           const Spacer(),
-          IconButton(
-            icon: const Icon(Icons.note_alt_outlined),
-            onPressed: () {
-              _showBookingBottomSheet(context:context);
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.shopping_cart_outlined),
-            onPressed: () {
-              // Cart functionality
-            },
-          ),
+          IconButton(icon: const Icon(Icons.shopping_cart_outlined), onPressed: () {}),
           GestureDetector(
             onTap: () {
               showModalBottomSheet(
@@ -98,11 +147,7 @@ class BookingScreen extends StatelessWidget {
                             : const AssetImage('assets/images/placeholder.png') as ImageProvider,
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        user?.email ?? 'No email',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                      ),
-                      const SizedBox(height: 16),
+                      Text(user?.email ?? 'No email'),
                       ListTile(
                         leading: const Icon(Icons.person),
                         title: const Text('Profile'),
@@ -120,7 +165,6 @@ class BookingScreen extends StatelessWidget {
                           Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
                         },
                       ),
-                      const SizedBox(height: 16),
                     ],
                   );
                 },
@@ -138,143 +182,213 @@ class BookingScreen extends StatelessWidget {
     );
   }
 
-  Widget _bookingCard() {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(19),
-      decoration: BoxDecoration(
-        border: Border.all(color: const Color.fromARGB(255, 99, 98, 98)),
-        borderRadius: BorderRadius.circular(12),
+  @override
+  Widget build(BuildContext context) {
+    int basePrice = homeSizes[selectedSizeIndex]['price'];
+    int totalPrice = isPetFriendly ? basePrice + 25 : basePrice;
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildTopHeader(context),
+            const SizedBox(height: 8),
+            const Text("Regular Cleaning", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            const Text("Weekly, bi-weekly, or monthly recurring cleaning service to keep your home consistently clean and fresh."),
+            const SizedBox(height: 16),
+            Row(
+              children: const [
+                Chip(label: Text("Same day booking")),
+                SizedBox(width: 8),
+                Chip(label: Text("Top rated cleaners")),
+              ],
+            ),
+            const SizedBox(height: 20),
+            _buildIncluded(),
+            const SizedBox(height: 20),
+            const Text("Select Your Home Size", style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+            ...List.generate(homeSizes.length, (index) {
+              bool isSelected = selectedSizeIndex == index;
+              return GestureDetector(
+                onTap: () => setState(() => selectedSizeIndex = index),
+                child: Container(
+                  margin: const EdgeInsets.symmetric(vertical: 6),
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: isSelected ? Colors.orange[100] : Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: isSelected ? Colors.orange : Colors.transparent),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(homeSizes[index]['label']),
+                      Text("\$${homeSizes[index]['price']}", style: const TextStyle(fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
+              );
+            }),
+            const SizedBox(height: 20),
+            _buildPetOption(),
+            const SizedBox(height: 20),
+            const Text("Special Instructions", style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            TextField(
+              controller: specialInstructionsController,
+              decoration: InputDecoration(
+                hintText: "e.g., Please focus on the kitchen...",
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                filled: true,
+                fillColor: Colors.grey[100],
+              ),
+              maxLines: 3,
+            ),
+            const SizedBox(height: 20),
+            const Text("Booking Summary", style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            _buildBookingSummary(homeSizes[selectedSizeIndex]['label'], totalPrice),
+            const SizedBox(height: 16),
+            if (selectedDate != null)
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _showDatePickerSheet,
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, padding: const EdgeInsets.all(14)),
+                child: const Text("Continue to Scheduling", style: TextStyle(fontSize: 16)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildFooter(),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildPetOption() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        const Flexible(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("Pet-Friendly Service", style: TextStyle(fontWeight: FontWeight.bold)),
+              Text("Extra care around pets, pet hair removal, and pet-safe products"),
+            ],
+          ),
+        ),
+        Row(
+          children: [
+            const Text("+\$25"),
+            const SizedBox(width: 10),
+            Switch(value: isPetFriendly, onChanged: (val) => setState(() => isPetFriendly = val)),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildIncluded() {
+    const included = [
+      "Dusting all surfaces and furniture",
+      "Vacuuming carpets and rugs",
+      "Mopping hard floors",
+      "Kitchen cleaning (counters, sink, stovetop)",
+      "Bathroom cleaning (toilet, sink, shower/tub)",
+      "Emptying trash bins",
+      "Making beds",
+    ];
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(10)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          Row(
-  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  children: [
-    Expanded(
-      child: Text(
-        "Full Apartment Cleaning",
-        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-        overflow: TextOverflow.ellipsis,
+        children: included.map((item) => Row(
+          children: [
+            const Icon(Icons.check_circle, color: Colors.green, size: 20),
+            const SizedBox(width: 8),
+            Expanded(child: Text(item)),
+          ],
+        )).toList(),
       ),
-    ),
-    SizedBox(width: 8),
-    Text(
-      "Card Action",
-      style: TextStyle(color: Colors.grey, fontSize: 14),
-    ),
-  ],
-),
+    );
+  }
 
-          SizedBox(height: 8),
-          Text("4.9 (28k bookings)", style: TextStyle(fontSize: 13)),
-          SizedBox(height: 10),
-          Text(
-            "Full Deep Cleaning of bathrooms and kitchens,\nincluding dusting and vacuuming",
-            style: TextStyle(fontSize: 13),
-          ),
-          SizedBox(height: 15),
-          Text("View Details", style: TextStyle(color: Colors.deepOrange, fontWeight: FontWeight.bold)),
+  Widget _buildBookingSummary(String sizeLabel, int price) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        children: [
+          _summaryRow("Service", "Regular Cleaning"),
+          _summaryRow("Size", sizeLabel),
+          if (selectedDate != null)
+            _summaryRow("Date", DateFormat('MMM d, yyyy').format(selectedDate!)),
+          if (selectedTimeSlot != null)
+            _summaryRow("Time", selectedTimeSlot!),
+          const Divider(),
+          _summaryRow("Total", "\$$price", isBold: true),
+          const SizedBox(height: 6),
+          const Text("One-time payment", style: TextStyle(color: Colors.grey)),
         ],
       ),
     );
   }
-}
 
-void _showBookingBottomSheet({required BuildContext context}) {
-  showModalBottomSheet(
-    context: context,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-    ),
-    builder: (context) {
-        return Padding(
-    padding: const EdgeInsets.all(16.0),
-    child: ConstrainedBox(
-      constraints: BoxConstraints(
-        maxHeight: 400,
+  Widget _summaryRow(String label, String value, {bool isBold = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label),
+          Text(value, style: TextStyle(fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
+        ],
       ),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    );
+  }
+
+  Widget _buildFooter() {
+    return Column(
+      children: const [
+        SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text(
-              "Currently Ongoing Subscription",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 6),
-            const Text("All Current ongoing subscriptions comes here"),
-            const SizedBox(height: 12),
-            ...List.generate(3, (index) {
-              return Card(
-                margin: const EdgeInsets.symmetric(vertical: 6),
-                child: ListTile(
-                  title: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text("Service Name"),
-                      SizedBox(height: 15),
-                      Text(
-                        "Card Content",
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    ],
-                  ),
-                  trailing: ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFF54A00),
-                      minimumSize: const Size(80, 32), 
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), 
-                    ),
-                    child: const Text(
-                      "Detailed View",
-                      style: TextStyle(fontSize: 12), 
-                    ),
-                  ),
-                ),
-              );
-            }),
-
-            const SizedBox(height: 6),
-            ...List.generate(3, (index) {
-              return Card(
-                margin: const EdgeInsets.symmetric(vertical: 6),
-                child: ListTile(
-                  title: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text("Service Name"),
-                      SizedBox(height: 15), 
-                      Text(
-                        "Card Content",
-                        style: TextStyle(fontSize: 12),
-                      ),
-
-                    ],
-                  ),
-                  trailing: ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFF54A00),
-                      minimumSize: const Size(80, 32), 
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), 
-                    ),
-                    child: const Text(
-                      "Detailed View",
-                      style: TextStyle(fontSize: 12), 
-                    ),
-                  ),
-                ),
-              );
-            }),
-
+            Icon(Icons.star, color: Colors.orange),
+            Icon(Icons.star, color: Colors.orange),
+            Icon(Icons.star, color: Colors.orange),
+            Icon(Icons.star, color: Colors.orange),
           ],
         ),
-      ),
-    ),
-  );
-}
-  );
+        SizedBox(height: 4),
+        Text("Satisfaction guaranteed"),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.lock, size: 16),
+            SizedBox(width: 4),
+            Text("Secure payment & insured cleaners"),
+          ],
+        ),
+        Divider(height: 30, color: Colors.grey),
+        Text("Houzy", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange)),
+        SizedBox(height: 4),
+        Text("Professional cleaning services you can trust"),
+        SizedBox(height: 6),
+        Text("Privacy Policy    Terms of Service    Contact Us", style: TextStyle(fontSize: 12)),
+        SizedBox(height: 30),
+      ],
+    );
+  }
 }
